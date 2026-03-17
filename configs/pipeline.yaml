@@ -1,0 +1,46 @@
+project_name: bigdata-asm
+
+data:
+  raw_path: ./data/raw
+  vehicle_route_mapping_path: ./data/vehicle_route_mapping.csv
+  replay_cache_path: ./data/replay/events.jsonl
+  bronze_path: ./data/lakehouse/bronze/bus_gps
+  silver_path: ./data/lakehouse/silver/bus_gps
+  gold_path: ./data/lakehouse/gold
+  checkpoint_root: ./data/checkpoints
+
+kafka:
+  bootstrap_servers: localhost:9092
+  topic_raw_gps: bus-gps-raw
+  topic_dlq: bus-gps-dlq
+  starting_offsets: earliest
+  max_offsets_per_trigger: 2000
+
+replay:
+  mode: sample
+  sample_size: 10000
+  speed_multiplier: 10.0
+  flush_every_n: 200
+
+schema:
+  bus_id_candidates: [bus_id, vehicle_id, plate, imei, msgBusWayPoint.vehicle]
+  route_id_candidates: [route_id, route, tuyến, line]
+  event_time_candidates: [event_time, timestamp, ts, time, recorded_at, datetime, msgBusWayPoint.datetime]
+  latitude_candidates: [latitude, lat, y, msgBusWayPoint.y]
+  longitude_candidates: [longitude, lon, lng, x, msgBusWayPoint.x]
+  speed_candidates: [speed, speed_kmh, velocity, msgBusWayPoint.speed]
+  heading_candidates: [heading, bearing, msgBusWayPoint.heading]
+
+quality:
+  trip_gap_minutes: 15
+  max_speed_kmh: 120
+  max_jump_meters: 2000
+  min_latitude: -90.0
+  max_latitude: 90.0
+  min_longitude: -180.0
+  max_longitude: 180.0
+
+emission:
+  fuel_liter_per_km: 0.28
+  idle_liter_per_minute: 0.03
+  co2_kg_per_liter_fuel: 2.68

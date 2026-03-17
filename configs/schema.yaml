@@ -1,0 +1,19 @@
+normalized_columns:
+  - event_time
+  - bus_id
+  - route_id
+  - latitude
+  - longitude
+  - speed_kmh
+  - heading
+  - ingest_time
+  - source_file
+  - trip_id
+  - prev_event_time
+  - prev_latitude
+  - prev_longitude
+  - segment_distance_m
+  - segment_duration_s
+  - is_duplicate
+  - is_valid_gps
+  - is_outlier

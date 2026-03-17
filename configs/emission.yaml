@@ -1,0 +1,9 @@
+model: distance_plus_idle
+units:
+  distance: km
+  idle_time: minute
+  co2: kg
+coefficients:
+  fuel_liter_per_km: 0.28
+  idle_liter_per_minute: 0.03
+  co2_kg_per_liter_fuel: 2.68

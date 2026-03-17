@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+.env
+.DS_Store
+
+data/lakehouse/
+data/checkpoints/
+data/replay/
+
+.metastore_db/
+spark-warehouse/
