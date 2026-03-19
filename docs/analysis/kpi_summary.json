@@ -1,11 +1,11 @@
 {
-  "total_distance_km": 986.58,
-  "total_fuel_liter": 277.09,
-  "total_co2_kg": 742.59,
-  "active_buses": 511,
+  "total_distance_km": 4224684.05,
+  "total_fuel_liter": 1217800.52,
+  "total_co2_kg": 3263705.4,
+  "active_buses": 528,
   "active_routes": 20,
-  "total_trips": 651,
+  "total_trips": 1859,
   "trip_route_missing_ratio": 0.0,
-  "date_from": "2025-03-22",
-  "date_to": "2025-05-10"
+  "date_from": "2025-03-20",
+  "date_to": "2025-05-11"
 }

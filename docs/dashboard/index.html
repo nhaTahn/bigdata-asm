@@ -65,7 +65,7 @@
     }
     .panels {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
       gap: 12px;
       margin-bottom: 12px;
     }
@@ -74,19 +74,22 @@
       font-size: 15px;
     }
     .table-wrap {
-      overflow: auto;
-      max-height: 340px;
+      overflow: visible;
+      max-height: none;
     }
     table {
       border-collapse: collapse;
       width: 100%;
       font-size: 13px;
+      table-layout: fixed;
     }
     th, td {
       text-align: left;
       padding: 8px;
       border-bottom: 1px solid #eef2f7;
-      white-space: nowrap;
+      white-space: normal;
+      word-break: break-word;
+      vertical-align: top;
     }
     th {
       color: var(--muted);
@@ -101,7 +104,6 @@
     }
     @media (max-width: 900px) {
       .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .panels { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -117,10 +119,18 @@
       <div class="card"><div class="kpi-label">Active Buses</div><div id="kpi-buses" class="kpi-value">-</div></div>
     </div>
 
+    <div class="card" style="margin-bottom: 12px;">
+      <div class="kpi-label">Spatial View</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="color:var(--muted);font-size:14px;">Open the trip map dashboard to explore GPS trajectories and trip timing on the Ho Chi Minh City map.</div>
+        <a href="./map.html" style="text-decoration:none;background:#0f766e;color:#fff;padding:10px 14px;border-radius:10px;font-weight:600;">Open Trip Map</a>
+      </div>
+    </div>
+
     <div class="panels">
       <div class="card">
         <h3 class="panel-title">Top 10 buses by CO2</h3>
-        <canvas id="topBusesChart"></canvas>
+        <div class="table-wrap"><table id="topBusTable"></table></div>
       </div>
       <div class="card">
         <h3 class="panel-title">CO2 trend by day</h3>
@@ -146,7 +156,7 @@
   </div>
 
   <script>
-    const payload = {"kpis": {"total_distance_km": 986.58, "total_fuel_liter": 277.09, "total_co2_kg": 742.59, "active_buses": 511, "active_routes": 20, "total_trips": 651, "trip_route_missing_ratio": 0.0, "date_from": "2025-03-22", "date_to": "2025-05-10"}, "top_buses": {"labels": ["06e2df42d1bed6d6732ef68790f78694f55abbeb99e7b374a121239aeebacd9f", "7e7fbb87b5a8d9b9606b76d5fe10fdf081a078cdaed696ce1bfabc14cea8ea0d", "7994507f485e7745d097e7a0078657f08b8481b4b5d021418a54304a66acfd5c", "e950603dc5f1901648fb4730fc33b87626b1ab3d49dd0f991fe17b01014f2be8", "5568e7e4a1d4f7405ca3db13e8c6bc3491ebceadd6539b44d01152506e695b75", "b1f6eca62179fa997b5366579251741926016c4f4beb47536fe99a30cbc2cdb7", "023a5053a29dc1cf4dd977f45ba4be62029551310cea89deadb43db0f401276b", "08c6c06155bb06ace06db813e1151ec94e3ef228e72855657b37075a69dd2f6f", "ba12fcfd1a4af9b841a7988d175e5ffbfa86a61e970c2f6bb685553808d18cd8", "e9162b2ab46a5fe448c66bf71622a0ef45076ec111c52d6b9b5d9b1b2d225ffa"], "values": [13.38, 12.92, 12.14, 11.07, 10.73, 9.92, 9.57, 9.46, 9.32, 9.1]}, "daily_trend": {"labels": ["2025-03-22", "2025-03-24", "2025-03-26", "2025-03-28", "2025-03-29", "2025-03-30", "2025-04-01", "2025-04-02", "2025-04-03", "2025-04-05", "2025-04-07", "2025-04-08", "2025-04-09", "2025-04-10", "2025-04-11", "2025-04-13", "2025-04-15", "2025-04-17", "2025-04-19", "2025-04-22", "2025-04-24", "2025-04-25", "2025-04-26", "2025-04-27", "2025-04-28", "2025-04-29", "2025-05-01", "2025-05-03", "2025-05-04", "2025-05-06", "2025-05-08", "2025-05-10"], "values": [31.34, 60.72, 53.06, 30.45, 0.0, 18.09, 56.24, 16.07, 1.82, 25.72, 26.31, 2.02, 50.68, 2.48, 13.44, 50.1, 21.95, 17.24, 12.59, 16.67, 0.0, 44.93, 23.25, 22.66, 0.0, 36.79, 0.02, 0.0, 13.03, 32.08, 27.07, 35.76]}, "peak_hours": {"labels": ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"], "values": [61.88, 93.08, 71.94, 43.32, 31.93, 37.94, 24.66, 81.97, 92.07, 58.64, 10.57, 24.83, 34.81, 31.28, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.02, 0.1, 4.11, 39.44]}, "top_routes_table": [{"route_id": "30", "distance_km": 134.38, "co2_kg_est": 100.84, "active_buses": 873}, {"route_id": "151", "distance_km": 117.35, "co2_kg_est": 88.06, "active_buses": 428}, {"route_id": "32", "distance_km": 106.66, "co2_kg_est": 80.03, "active_buses": 1244}, {"route_id": "152", "distance_km": 75.73, "co2_kg_est": 58.17, "active_buses": 480}, {"route_id": "167V", "distance_km": 68.06, "co2_kg_est": 51.53, "active_buses": 384}, {"route_id": "50", "distance_km": 64.58, "co2_kg_est": 48.46, "active_buses": 205}, {"route_id": "45", "distance_km": 64.47, "co2_kg_est": 48.38, "active_buses": 667}, {"route_id": "72", "distance_km": 60.96, "co2_kg_est": 45.74, "active_buses": 620}, {"route_id": "01", "distance_km": 46.38, "co2_kg_est": 35.04, "active_buses": 389}, {"route_id": "93", "distance_km": 45.88, "co2_kg_est": 34.66, "active_buses": 326}], "trip_outliers_table": [{"trip_id": "7f50ce729fb252941d0b1bc2d6280504e0f00636d35c4c9fdaaad607f98848ad_2", "bus_id": "7f50ce729fb252941d0b1bc2d6280504e0f00636d35c4c9fdaaad607f98848ad", "route_id": "152", "distance_km": 3.85, "co2_kg_est": 4.23, "co2_kg_per_km": 1.098}, {"trip_id": "5708619e511586af55bd30334842ff5b71c7a1e32cc7d5139d7f2b24e998547a_1", "bus_id": "5708619e511586af55bd30334842ff5b71c7a1e32cc7d5139d7f2b24e998547a", "route_id": "93", "distance_km": 1.96, "co2_kg_est": 1.7, "co2_kg_per_km": 0.867}, {"trip_id": "e9162b2ab46a5fe448c66bf71622a0ef45076ec111c52d6b9b5d9b1b2d225ffa_1", "bus_id": "e9162b2ab46a5fe448c66bf71622a0ef45076ec111c52d6b9b5d9b1b2d225ffa", "route_id": "167V", "distance_km": 6.73, "co2_kg_est": 5.51, "co2_kg_per_km": 0.818}, {"trip_id": "73a741a3f8b683da609a4eb5df1b7114f92c6a0a8b7c468874c80698ebc6102b_2", "bus_id": "73a741a3f8b683da609a4eb5df1b7114f92c6a0a8b7c468874c80698ebc6102b", "route_id": "01", "distance_km": 5.03, "co2_kg_est": 4.01, "co2_kg_per_km": 0.798}, {"trip_id": "a1e486eb27c6de456ca7a26934dc5368e599943b70f382dfe16bced04ec600ff_1", "bus_id": "a1e486eb27c6de456ca7a26934dc5368e599943b70f382dfe16bced04ec600ff", "route_id": "169V", "distance_km": 4.7, "co2_kg_est": 3.52, "co2_kg_per_km": 0.75}, {"trip_id": "29dc4c603e2b948e360f89f4b939a41a0e3056c7ffa8cd070325ff41f250c1b8_1", "bus_id": "29dc4c603e2b948e360f89f4b939a41a0e3056c7ffa8cd070325ff41f250c1b8", "route_id": "152", "distance_km": 4.16, "co2_kg_est": 3.12, "co2_kg_per_km": 0.75}, {"trip_id": "79cc14ee1344412b971db13327664956deaf542fa3578d6bf4e340b33db35fb1_1", "bus_id": "79cc14ee1344412b971db13327664956deaf542fa3578d6bf4e340b33db35fb1", "route_id": "45", "distance_km": 4.51, "co2_kg_est": 3.39, "co2_kg_per_km": 0.75}, {"trip_id": "832342d58f8589940ac5836be97bba479a03455609d96c825dc2535364b1990b_2", "bus_id": "832342d58f8589940ac5836be97bba479a03455609d96c825dc2535364b1990b", "route_id": "152", "distance_km": 5.57, "co2_kg_est": 4.18, "co2_kg_per_km": 0.75}, {"trip_id": "9b5a8833df14c435f7cde19ac299efd30fd7a8445d1598611781553b4dfe3a40_2", "bus_id": "9b5a8833df14c435f7cde19ac299efd30fd7a8445d1598611781553b4dfe3a40", "route_id": "163V", "distance_km": 3.06, "co2_kg_est": 2.3, "co2_kg_per_km": 0.75}, {"trip_id": "17c7d90a6ed41cb29c0b0933380c6273326f6cc810494e8cba0a3b78a78cd97c_1", "bus_id": "17c7d90a6ed41cb29c0b0933380c6273326f6cc810494e8cba0a3b78a78cd97c", "route_id": "30", "distance_km": 3.47, "co2_kg_est": 2.6, "co2_kg_per_km": 0.75}, {"trip_id": "aa50d3c879a96a1514a1caf235c472128328958a63e6ea362dc794e04f253c61_1", "bus_id": "aa50d3c879a96a1514a1caf235c472128328958a63e6ea362dc794e04f253c61", "route_id": "30", "distance_km": 4.91, "co2_kg_est": 3.69, "co2_kg_per_km": 0.75}, {"trip_id": "a5d2d7b35f8d039743fa622720737a02a3ccdb53fbcc45a024b0c73944bc32ef_1", "bus_id": "a5d2d7b35f8d039743fa622720737a02a3ccdb53fbcc45a024b0c73944bc32ef", "route_id": "152", "distance_km": 2.44, "co2_kg_est": 1.83, "co2_kg_per_km": 0.75}, {"trip_id": "cbf6bd04119171d00f7839e71becf4f86a44cb943480693f5954b2e453c18efc_1", "bus_id": "cbf6bd04119171d00f7839e71becf4f86a44cb943480693f5954b2e453c18efc", "route_id": "72", "distance_km": 1.71, "co2_kg_est": 1.28, "co2_kg_per_km": 0.75}, {"trip_id": "e18dd00a96fe21d4f357334f075269cc5c94bab3333aced766ab74f5870e11cf_2", "bus_id": "e18dd00a96fe21d4f357334f075269cc5c94bab3333aced766ab74f5870e11cf", "route_id": "32", "distance_km": 2.02, "co2_kg_est": 1.51, "co2_kg_per_km": 0.75}, {"trip_id": "a3083acabdc469fad5a6197197658569d2a2782dee588aa211eb2370ddcc0b92_2", "bus_id": "a3083acabdc469fad5a6197197658569d2a2782dee588aa211eb2370ddcc0b92", "route_id": "91", "distance_km": 2.48, "co2_kg_est": 1.86, "co2_kg_per_km": 0.75}]};
+    const payload = {"kpis": {"total_distance_km": 4224684.05, "total_fuel_liter": 1217800.52, "total_co2_kg": 3263705.4, "active_buses": 528, "active_routes": 20, "total_trips": 1859, "trip_route_missing_ratio": 0.0, "date_from": "2025-03-20", "date_to": "2025-05-11"}, "top_buses_table": [{"bus_id": "bf78beaa473f6dc9f2c33f4bb4b677da21c8e09bb108988ef3be45c7c2392985", "route_id": "151", "route_name": "Ben xe Mien Tay - Ben xe An Suong", "distance_km": 18576.9, "co2_kg_est": 17072.88}, {"bus_id": "1c9782b588454d4eab0190e70fcfbccc2f6e5b8021e03b3e4d387683c332ebf3", "route_id": "32", "route_name": "Ben xe Mien Tay - Ben xe Nga tu Ga", "distance_km": 22531.47, "co2_kg_est": 16908.22}, {"bus_id": "de71f00d732205849f38babd3a0d5a00ca93b8843765996b24f2f03690d32b63", "route_id": "151", "route_name": "Ben xe Mien Tay - Ben xe An Suong", "distance_km": 18231.08, "co2_kg_est": 16834.21}, {"bus_id": "93d3ffc1e12588926931d5faf261ea377906d78ea13365802abe8317086b5aef", "route_id": "167V", "route_name": "Dai hoc Nong Lam - Khu che xuat Linh Trung", "distance_km": 19885.23, "co2_kg_est": 15998.99}, {"bus_id": "199e046d2f4657115b402d9ca09006e93ac008abf11452b8f96553f2aac7b1af", "route_id": "151", "route_name": "Ben xe Mien Tay - Ben xe An Suong", "distance_km": 18318.25, "co2_kg_est": 15895.16}, {"bus_id": "da1749a41dafd5e78869e83553b882d580b4bf2d1b3dda07061c4911e9efc03e", "route_id": "151", "route_name": "Ben xe Mien Tay - Ben xe An Suong", "distance_km": 18547.45, "co2_kg_est": 15870.57}, {"bus_id": "1973be93eb3e815b931f7e2538d541d285337c52eb6042fa2412693c7cf9c2d5", "route_id": "151", "route_name": "Ben xe Mien Tay - Ben xe An Suong", "distance_km": 18431.68, "co2_kg_est": 15740.59}, {"bus_id": "92b827b166b0f851f83ebfeb6d775e827a5ee7542e27e19a4a1c427516ecef93", "route_id": "151", "route_name": "Ben xe Mien Tay - Ben xe An Suong", "distance_km": 19485.63, "co2_kg_est": 15547.41}, {"bus_id": "ea860eaa43d371ce6ae97faa03e70440a3342a92a9f680e91b5d5dd4004d8a15", "route_id": "151", "route_name": "Ben xe Mien Tay - Ben xe An Suong", "distance_km": 18463.06, "co2_kg_est": 15541.46}, {"bus_id": "f58ef338cd63bc2c7b90613aa6174c7498c56bf9096272a823f95912b0dda826", "route_id": "151", "route_name": "Ben xe Mien Tay - Ben xe An Suong", "distance_km": 19491.22, "co2_kg_est": 15184.74}], "daily_trend": {"labels": ["2025-03-20", "2025-03-21", "2025-03-22", "2025-03-23", "2025-03-24", "2025-03-25", "2025-03-26", "2025-03-27", "2025-03-28", "2025-03-29", "2025-03-30", "2025-03-31", "2025-04-01", "2025-04-02", "2025-04-03", "2025-04-04", "2025-04-05", "2025-04-06", "2025-04-07", "2025-04-08", "2025-04-09", "2025-04-10", "2025-04-11", "2025-04-12", "2025-04-13", "2025-04-14", "2025-04-15", "2025-04-16", "2025-04-17", "2025-04-18", "2025-04-19", "2025-04-20", "2025-04-21", "2025-04-22", "2025-04-23", "2025-04-24", "2025-04-25", "2025-04-26", "2025-04-27", "2025-04-28", "2025-04-29", "2025-04-30", "2025-05-01", "2025-05-02", "2025-05-03", "2025-05-04", "2025-05-05", "2025-05-06", "2025-05-07", "2025-05-08", "2025-05-09", "2025-05-10", "2025-05-11"], "values": [54007.78, 119413.88, 123506.37, 106152.11, 48140.01, 63335.29, 103585.02, 53457.47, 58178.54, 59276.87, 59803.76, 61571.85, 78850.48, 59672.42, 63788.63, 61012.38, 57976.85, 56569.9, 54898.0, 58266.83, 61310.04, 59620.9, 59956.19, 58840.22, 58854.93, 88553.84, 59916.57, 59355.0, 58850.11, 89603.63, 59409.53, 59688.08, 41629.75, 34339.65, 59516.06, 38551.7, 69532.37, 60020.94, 59149.69, 59990.41, 59391.45, 26642.86, 53720.45, 54075.91, 52913.66, 55674.34, 56830.93, 60553.74, 59310.58, 59605.98, 59385.96, 58155.87, 9289.62]}, "peak_hours": {"labels": ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"], "values": [2771.25, 2757.31, 2228.67, 12654.35, 91298.86, 208567.77, 202321.57, 194588.66, 197176.35, 184556.56, 189044.05, 190706.61, 183075.98, 168996.78, 166040.43, 203114.72, 222861.02, 233651.22, 214496.64, 187380.11, 128933.17, 53807.53, 19476.77, 3199.03]}, "top_routes_table": [{"route_id": "32", "route_name": "Ben xe Mien Tay - Ben xe Nga tu Ga", "duration_min": "80", "distance_km_ref": 24.8, "stops_inbound_outbound": "71/74", "connected_metro1": "", "distance_km": 769641.05, "co2_kg_est": 577541.64, "unique_active_buses": 71}, {"route_id": "30", "route_name": "Cho Tan Huong - Ben xe Van Thanh", "duration_min": "50", "distance_km_ref": 18.3, "stops_inbound_outbound": "49/56", "connected_metro1": "", "distance_km": 405347.1, "co2_kg_est": 305222.56, "unique_active_buses": 65}, {"route_id": "72", "route_name": "Ben xe Sai Gon - Hiep Phuoc", "duration_min": "55", "distance_km_ref": 21.6, "stops_inbound_outbound": "42/41", "connected_metro1": "", "distance_km": 354348.47, "co2_kg_est": 265903.09, "unique_active_buses": 40}, {"route_id": "151", "route_name": "Ben xe Mien Tay - Ben xe An Suong", "duration_min": "50", "distance_km_ref": 17.2, "stops_inbound_outbound": "39/35", "connected_metro1": "", "distance_km": 300217.7, "co2_kg_est": 252028.13, "unique_active_buses": 18}, {"route_id": "91", "route_name": "Ben xe Mien Tay - Cho Thu Duc", "duration_min": "80", "distance_km_ref": 25.1, "stops_inbound_outbound": "67/65", "connected_metro1": "", "distance_km": 326634.61, "co2_kg_est": 246018.82, "unique_active_buses": 51}, {"route_id": "45", "route_name": "Dai hoc Kinh Te - Ben xe Mien Dong", "duration_min": "70-80", "distance_km_ref": 22.3, "stops_inbound_outbound": "56/58", "connected_metro1": "Y", "distance_km": 280319.98, "co2_kg_est": 211069.81, "unique_active_buses": 47}, {"route_id": "88", "route_name": "Ben Thanh - Cho Long Phuoc", "duration_min": "65", "distance_km_ref": 23.6, "stops_inbound_outbound": "55/53", "connected_metro1": "Y", "distance_km": 221587.91, "co2_kg_est": 166283.65, "unique_active_buses": 30}, {"route_id": "167V", "route_name": "Dai hoc Nong Lam - Khu che xuat Linh Trung", "duration_min": "55", "distance_km_ref": 13.15, "stops_inbound_outbound": "37", "connected_metro1": "Y", "distance_km": 199086.96, "co2_kg_est": 163826.32, "unique_active_buses": 19}, {"route_id": "93", "route_name": "Ben Thanh - Ben xe Mien Dong moi", "duration_min": "70-80", "distance_km_ref": 26.2, "stops_inbound_outbound": "55/55", "connected_metro1": "Y", "distance_km": 210187.14, "co2_kg_est": 158082.49, "unique_active_buses": 30}, {"route_id": "152", "route_name": "Trung Son - San bay Tan Son Nhat", "duration_min": "50-55", "distance_km_ref": 14.55, "stops_inbound_outbound": "41/35", "connected_metro1": "Y", "distance_km": 185747.84, "co2_kg_est": 140765.77, "unique_active_buses": 30}], "trip_outliers_table": [{"trip_id": "75ba2b7a1933c60edaa37bd89d66ad183a20e0b0c38abeb0ceef211e1760a5f5_5", "bus_id": "75ba2b7a1933c60edaa37bd89d66ad183a20e0b0c38abeb0ceef211e1760a5f5", "route_id": "156D", "route_name": "Ben Thanh - Benh vien Mat", "distance_km": 93.76, "co2_kg_est": 1210.44, "co2_kg_per_km": 12.91}, {"trip_id": "ba6ab13787c41333aac256cd1b224f926cc3e60627bd555315af59030d7cc43c_5", "bus_id": "ba6ab13787c41333aac256cd1b224f926cc3e60627bd555315af59030d7cc43c", "route_id": "164D", "route_name": "Dai hoc Nong Lam - Chung cu Topaz", "distance_km": 102.93, "co2_kg_est": 1008.44, "co2_kg_per_km": 9.797}, {"trip_id": "6765d6f778a8387fd017521310970acc77500e917c404e6079345d452efd0134_5", "bus_id": "6765d6f778a8387fd017521310970acc77500e917c404e6079345d452efd0134", "route_id": "163V", "route_name": "Ga Binh Thai - Truong Phuoc Binh", "distance_km": 93.03, "co2_kg_est": 832.79, "co2_kg_per_km": 8.952}, {"trip_id": "b0217651187a1a3ff4cd019a70e1de1420ff4f36972a182ec9cf1b3aa24090bc_5", "bus_id": "b0217651187a1a3ff4cd019a70e1de1420ff4f36972a182ec9cf1b3aa24090bc", "route_id": "169V", "route_name": "Ga Binh Thai - Vincom Thu Duc", "distance_km": 54.78, "co2_kg_est": 448.58, "co2_kg_per_km": 8.189}, {"trip_id": "c3caf22c756887e81263e8d74f67ebadb9ecd604e07e6866d7bb2ee4bb757b5e_5", "bus_id": "c3caf22c756887e81263e8d74f67ebadb9ecd604e07e6866d7bb2ee4bb757b5e", "route_id": "156D", "route_name": "Ben Thanh - Benh vien Mat", "distance_km": 106.36, "co2_kg_est": 800.1, "co2_kg_per_km": 7.523}, {"trip_id": "90f47723039264e6713de1f8a129950b8c4eb9381234f9556f8f432f163a7416_5", "bus_id": "90f47723039264e6713de1f8a129950b8c4eb9381234f9556f8f432f163a7416", "route_id": "167V", "route_name": "Dai hoc Nong Lam - Khu che xuat Linh Trung", "distance_km": 63.36, "co2_kg_est": 407.7, "co2_kg_per_km": 6.435}, {"trip_id": "0c3c7cd01f49a477b040a63b61b0d2286677650eb3c6a7bacb5479761d68d2e5_5", "bus_id": "0c3c7cd01f49a477b040a63b61b0d2286677650eb3c6a7bacb5479761d68d2e5", "route_id": "156D", "route_name": "Ben Thanh - Benh vien Mat", "distance_km": 73.97, "co2_kg_est": 466.49, "co2_kg_per_km": 6.307}, {"trip_id": "17101ed18ee3a41330794c05c00057ededdab2b882393826db6b2c0cc4ca3ef4_5", "bus_id": "17101ed18ee3a41330794c05c00057ededdab2b882393826db6b2c0cc4ca3ef4", "route_id": "167V", "route_name": "Dai hoc Nong Lam - Khu che xuat Linh Trung", "distance_km": 73.66, "co2_kg_est": 460.29, "co2_kg_per_km": 6.249}, {"trip_id": "208ebae4cee92538292a7753f8864d7d0143177f5a298dc36dbbfad05e05846a_5", "bus_id": "208ebae4cee92538292a7753f8864d7d0143177f5a298dc36dbbfad05e05846a", "route_id": "163V", "route_name": "Ga Binh Thai - Truong Phuoc Binh", "distance_km": 67.79, "co2_kg_est": 411.54, "co2_kg_per_km": 6.071}, {"trip_id": "626368a246f2d63b43777a4536d704938045bcf093eba8b59490a8a984d2aa95_5", "bus_id": "626368a246f2d63b43777a4536d704938045bcf093eba8b59490a8a984d2aa95", "route_id": "169V", "route_name": "Ga Binh Thai - Vincom Thu Duc", "distance_km": 75.0, "co2_kg_est": 411.87, "co2_kg_per_km": 5.492}, {"trip_id": "8c054e94c6f6ce665d7e7d6daf97946d69dc5abfe59d28970f31d7d0d0f60fad_5", "bus_id": "8c054e94c6f6ce665d7e7d6daf97946d69dc5abfe59d28970f31d7d0d0f60fad", "route_id": "164D", "route_name": "Dai hoc Nong Lam - Chung cu Topaz", "distance_km": 79.31, "co2_kg_est": 426.59, "co2_kg_per_km": 5.379}, {"trip_id": "b20f48a232d9fa255fff5eb8d5bda969be8b98fc7d5bd1d09e2758ab66525277_5", "bus_id": "b20f48a232d9fa255fff5eb8d5bda969be8b98fc7d5bd1d09e2758ab66525277", "route_id": "57", "route_name": "Cho Phuoc Binh - Truong Hiep Binh", "distance_km": 184.35, "co2_kg_est": 951.6, "co2_kg_per_km": 5.162}, {"trip_id": "58d4a2dccb64b02b8fc810842897e6fd590da67a548443658e2abb8ff7376257_3", "bus_id": "58d4a2dccb64b02b8fc810842897e6fd590da67a548443658e2abb8ff7376257", "route_id": "169V", "route_name": "Ga Binh Thai - Vincom Thu Duc", "distance_km": 326.39, "co2_kg_est": 1465.03, "co2_kg_per_km": 4.489}, {"trip_id": "6d49c759894e49a93be63a0aecd3f39df346bedc0123cb45e4fe08da6a0262b3_2", "bus_id": "6d49c759894e49a93be63a0aecd3f39df346bedc0123cb45e4fe08da6a0262b3", "route_id": "163V", "route_name": "Ga Binh Thai - Truong Phuoc Binh", "distance_km": 522.1, "co2_kg_est": 2095.48, "co2_kg_per_km": 4.014}, {"trip_id": "0b53b328abcae9a3b5f594a8c346aa516cd3f304fdaa578f3e8907cd0f2f5194_5", "bus_id": "0b53b328abcae9a3b5f594a8c346aa516cd3f304fdaa578f3e8907cd0f2f5194", "route_id": "167V", "route_name": "Dai hoc Nong Lam - Khu che xuat Linh Trung", "distance_km": 115.05, "co2_kg_est": 444.82, "co2_kg_per_km": 3.866}]};
     const fmt = (v, digits=2) => Number(v || 0).toLocaleString(undefined, { maximumFractionDigits: digits });
 
     document.getElementById("kpi-distance").textContent = fmt(payload.kpis.total_distance_km);
@@ -156,25 +166,6 @@
 
     const axisColor = "#5b667a";
     const gridColor = "#e5e7eb";
-
-    new Chart(document.getElementById("topBusesChart"), {
-      type: "bar",
-      data: {
-        labels: payload.top_buses.labels,
-        datasets: [{
-          label: "CO2 (kg)",
-          data: payload.top_buses.values,
-          backgroundColor: "#0f766e"
-        }]
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: axisColor }, grid: { color: gridColor } },
-          y: { ticks: { color: axisColor }, grid: { color: gridColor } }
-        }
-      }
-    });
 
     new Chart(document.getElementById("dailyTrendChart"), {
       type: "line",
@@ -224,11 +215,18 @@
         return;
       }
       const headers = Object.keys(rows[0]);
-      const thead = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+      const labelize = (text) => text
+        .replace(/_/g, " ")
+        .replace(/kg/gi, "kg")
+        .replace(/co2/gi, "CO2")
+        .replace(/id/g, "ID")
+        .replace(/\w/g, (ch) => ch.toUpperCase());
+      const thead = "<tr>" + headers.map(h => `<th>${labelize(h)}</th>`).join("") + "</tr>";
       const tbody = rows.map(r => "<tr>" + headers.map(h => `<td>${r[h]}</td>`).join("") + "</tr>").join("");
       table.innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
     };
 
+    renderTable("topBusTable", payload.top_buses_table);
     renderTable("routeTable", payload.top_routes_table);
     renderTable("tripTable", payload.trip_outliers_table);
   </script>

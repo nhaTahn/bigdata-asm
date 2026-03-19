@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 
 from pyspark.sql import SparkSession
@@ -8,6 +9,10 @@ from pyspark.sql import functions as F
 
 from spark.common.config import load_config
 from spark.common.transform import enrich_segments, normalize_bronze
+
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logger = logging.getLogger(__name__)
 
 
 def _build_spark() -> SparkSession:
@@ -25,16 +30,22 @@ def _build_spark() -> SparkSession:
 def run(config_path: str) -> None:
     cfg = load_config(config_path)
     spark = _build_spark()
+    spark.sparkContext.setLogLevel("WARN")
     kafka_bootstrap = os.getenv("KAFKA_BOOTSTRAP_SERVERS", cfg["kafka"]["bootstrap_servers"])
 
     starting_offsets = os.getenv("KAFKA_STARTING_OFFSETS", cfg["kafka"].get("starting_offsets", "earliest"))
+    max_offsets_per_trigger = os.getenv(
+        "KAFKA_MAX_OFFSETS_PER_TRIGGER",
+        str(cfg["kafka"].get("max_offsets_per_trigger", 2000)),
+    )
 
     kafka_df = (
         spark.readStream.format("kafka")
         .option("kafka.bootstrap.servers", kafka_bootstrap)
         .option("subscribe", cfg["kafka"]["topic_raw_gps"])
         .option("startingOffsets", starting_offsets)
-        .option("maxOffsetsPerTrigger", str(cfg["kafka"].get("max_offsets_per_trigger", 2000)))
+        .option("failOnDataLoss", "false")
+        .option("maxOffsetsPerTrigger", max_offsets_per_trigger)
         .load()
     )
 
@@ -51,8 +62,11 @@ def run(config_path: str) -> None:
 
     def process_batch(batch_df, batch_id: int) -> None:
         if batch_df.rdd.isEmpty():
+            logger.info("bronze-silver batch=%s empty", batch_id)
             return
 
+        row_count = batch_df.count()
+        logger.info("bronze-silver batch=%s rows=%s writing Bronze/Silver", batch_id, row_count)
         batch_df.write.format("delta").mode("append").save(cfg["data"]["bronze_path"])
 
         silver_input = normalize_bronze(batch_df)
@@ -63,14 +77,32 @@ def run(config_path: str) -> None:
             max_jump_meters=float(cfg["quality"]["max_jump_meters"]),
         )
         silver_clean = silver_enriched.filter(F.col("is_valid_gps") == True)  # noqa: E712
+        valid_count = silver_clean.count()
         silver_clean.write.format("delta").mode("append").save(cfg["data"]["silver_path"])
+        logger.info("bronze-silver batch=%s valid_rows=%s write_done", batch_id, valid_count)
 
     query = (
         parsed.writeStream.foreachBatch(process_batch)
         .option("checkpointLocation", f"{cfg['data']['checkpoint_root']}/bronze_silver")
         .start()
     )
-    query.awaitTermination()
+    logger.info("bronze-silver stream started")
+
+    while query.isActive:
+        query.awaitTermination(30)
+        progress = query.lastProgress
+        if progress:
+            logger.info(
+                "bronze-silver progress batch=%s input_rows=%s processed_rps=%s",
+                progress.get("batchId"),
+                progress.get("numInputRows"),
+                progress.get("processedRowsPerSecond"),
+            )
+        else:
+            logger.info("bronze-silver waiting for data")
+
+    if query.exception() is not None:
+        raise query.exception()
 
 
 def main() -> None:
