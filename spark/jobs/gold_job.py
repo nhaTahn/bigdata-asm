@@ -60,21 +60,23 @@ def run(config_path: str) -> None:
     fuel_per_km = float(cfg["emission"]["fuel_liter_per_km"])
     idle_per_min = float(cfg["emission"]["idle_liter_per_minute"])
     co2_per_liter = float(cfg["emission"]["co2_kg_per_liter_fuel"])
+    report_timezone = "Asia/Ho_Chi_Minh"
 
     enriched = (
         silver_df.withColumn("distance_km", F.coalesce(F.col("segment_distance_m"), F.lit(0.0)) / 1000.0)
         .withColumn("idle_min", F.when(F.coalesce(F.col("speed_kmh"), F.lit(0.0)) <= 1.0, F.col("segment_duration_s") / 60.0).otherwise(F.lit(0.0)))
         .withColumn("fuel_liter_est", F.col("distance_km") * F.lit(fuel_per_km) + F.col("idle_min") * F.lit(idle_per_min))
         .withColumn("co2_kg_est", F.col("fuel_liter_est") * F.lit(co2_per_liter))
-        .withColumn("event_date", F.to_date("event_time"))
-        .withColumn("event_hour", F.hour("event_time"))
+        .withColumn("event_time_local", F.from_utc_timestamp("event_time", report_timezone))
+        .withColumn("event_date", F.to_date("event_time_local"))
+        .withColumn("event_hour", F.hour("event_time_local"))
     )
 
     trip_summary = (
         enriched.groupBy("trip_id", "bus_id", "route_id")
         .agg(
-            F.min("event_time").alias("trip_start"),
-            F.max("event_time").alias("trip_end"),
+            F.min("event_time_local").alias("trip_start"),
+            F.max("event_time_local").alias("trip_end"),
             F.sum("distance_km").alias("distance_km"),
             F.sum("fuel_liter_est").alias("fuel_liter_est"),
             F.sum("co2_kg_est").alias("co2_kg_est"),

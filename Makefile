@@ -3,11 +3,11 @@ SHELL := /bin/bash
 export
 
 SPARK_PACKAGES := org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,io.delta:delta-spark_2.12:3.2.0
-SPARK_LOCAL_CORES ?= 2
-SPARK_DRIVER_MEMORY ?= 2g
-SPARK_EXECUTOR_MEMORY ?= 2g
-SPARK_SHUFFLE_PARTITIONS ?= 2
-SPARK_DEFAULT_PARALLELISM ?= 2
+SPARK_LOCAL_CORES ?= 1
+SPARK_DRIVER_MEMORY ?= 1g
+SPARK_EXECUTOR_MEMORY ?= 1g
+SPARK_SHUFFLE_PARTITIONS ?= 1
+SPARK_DEFAULT_PARALLELISM ?= 1
 
 .PHONY: setup podman-ready up down logs create-topics dataset-inspect replay bronze-silver bronze-silver-bg bronze-silver-logs bronze-silver-stop gold report-assets reset-stream test format lint
 

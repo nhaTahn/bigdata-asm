@@ -1,0 +1,32 @@
+route_no,route_name,duration_min,distance_km,stops_inbound_outbound,connected_metro1
+70-5,Bo Heo - Loc Hung,15,6.00,2/2,Y
+61-7,Ben do Binh My - Ben xe Binh Duong,15,6.60,2/2,
+156D,Ben Thanh - Benh vien Mat,30,7.35,24,Y
+156V,Ben Thanh - Ga Hoa Hung,30,7.35,23,Y
+169D,Ga Binh Thai - Cang Phuc Long,25,7.90,22,Y
+169V,Ga Binh Thai - Vincom Thu Duc,25,7.90,21,Y
+163D,Ga Binh Thai - Cao dang Cong Thuong,25,8.00,24,Y
+163V,Ga Binh Thai - Truong Phuoc Binh,25,8.00,25,Y
+1,Ben Thanh - Ben xe Cho Lon,35,8.59,28/33,Y
+164D,Dai hoc Nong Lam - Chung cu Topaz,35,10.40,19,Y
+164V,Dai hoc Nong Lam - Ga Khu Cong nghe cao,35,10.40,20,Y
+57,Cho Phuoc Binh - Truong Hiep Binh,42,13.10,34/33,
+167D,Dai hoc Nong Lam - Ga Khu Cong nghe cao,55,13.15,34,Y
+167V,Dai hoc Nong Lam - Khu che xuat Linh Trung,55,13.15,37,Y
+152,Trung Son - San bay Tan Son Nhat,50-55,14.55,41/35,Y
+27,Ben xe Sai Gon - Ben xe An Suong,55-65,15.60,42/38,
+148,Ben xe Mien Tay - Go Vap,50-65,16.70,41/49,
+55,Quang Trung - Ben xe Van Thanh,45,16.80,51/42,
+151,Ben xe Mien Tay - Ben xe An Suong,50,17.20,39/35,
+30,Cho Tan Huong - Ben xe Van Thanh,50,18.30,49/56,
+122,Ben xe An Suong - Tan Quy,50,19.76,43/38,
+3,Ben Thanh - Thanh Xuan,60-65,20.60,52/55,Y
+72,Ben xe Sai Gon - Hiep Phuoc,55,21.60,42/41,
+45,Dai hoc Kinh Te - Ben xe Mien Dong,70-80,22.30,56/58,Y
+88,Ben Thanh - Cho Long Phuoc,65,23.60,55/53,Y
+32,Ben xe Mien Tay - Ben xe Nga tu Ga,80,24.80,71/74,
+91,Ben xe Mien Tay - Cho Thu Duc,80,25.10,67/65,
+93,Ben Thanh - Ben xe Mien Dong moi,70-80,26.20,55/55,Y
+24,Ben xe Mien Dong - Hoc Mon,75,27.20,67/64,
+50,Dai hoc Bach Khoa - Dai hoc Quoc Gia,65,28.60,59/60,
+90,Pha Binh Khanh - Can Thanh,75,45.60,29/28,

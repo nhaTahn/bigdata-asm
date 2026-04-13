@@ -29,17 +29,17 @@ Local runnable MVP for ingesting historical HCMC bus GPS data as simulated strea
 ```
 
 ## 3. Prerequisites
-- Docker + Docker Compose
-- Python 3.10+
+- Podman Desktop (macOS) or Docker (with compose compatible CLI)
+- Python 3.9+ (recommended: same version as `.venv` in this repo)
+- `make`
 
 ## 4. Setup
 ```bash
 cp .env.example .env
 make setup
-make up
 ```
 
-## 5. Inspect Dataset (Phase 1)
+## 5. Data Placement
 Put dataset files into `data/raw/` first.
 
 Supported raw file types:
@@ -47,6 +47,7 @@ Supported raw file types:
 - `.json` (json-lines)
 - `.parquet`
 
+## 6. Inspect Dataset
 Run inspection:
 ```bash
 make dataset-inspect
@@ -55,40 +56,68 @@ make dataset-inspect
 Output file:
 - `docs/dataset_inspection.json`
 
-## 6. Start End-to-End Flow
-Create Kafka topic:
+## 7. End-to-End (Recommended First Run: Sample Mode)
+Open 3 terminals in repo root.
+
+Terminal A: start stream processor (Bronze/Silver), keep this running.
 ```bash
 make create-topics
+make bronze-silver
 ```
 
-Run Bronze + Silver streaming job in background:
+Terminal B: replay historical data to Kafka.
 ```bash
-make bronze-silver-bg
+REPLAY_MODE=sample REPLAY_SAMPLE_SIZE=10000 make replay
 ```
 
-Check stream logs:
-```bash
-make bronze-silver-logs
-```
-
-Run replay producer:
-```bash
-make replay
-```
-
-Run Gold aggregation job:
+Terminal C: after replay completes, run Gold and report/dashboard.
 ```bash
 make gold
+make report-assets
 ```
 
-## 7. Sample Mode / Full Mode
+Open dashboard:
+```bash
+open docs/dashboard/index.html
+```
+
+Important:
+- `make bronze-silver` is a streaming job and does not exit by itself.
+- Consider the pipeline "done" when:
+1. Replay finishes (`Replay completed ...`)
+2. `make gold` succeeds
+3. `make report-assets` generates files under `docs/analysis` and `docs/dashboard`
+
+## 8. End-to-End (Full Mode)
+Full mode reads entire `data/raw` and can take a long time before first publish log.
+
+```bash
+# Terminal A
+make create-topics
+make bronze-silver
+
+# Terminal B
+REPLAY_MODE=full make replay
+
+# Terminal C (after replay completed)
+make gold
+make report-assets
+```
+
+If full mode looks "stuck", verify replay process is still alive:
+```bash
+ps aux | rg replay_producer
+```
+
+## 9. Runtime Config
 Configured in `configs/pipeline.yaml` and override-able by `.env`:
 - `REPLAY_MODE=sample|full`
 - `REPLAY_SAMPLE_SIZE=10000`
 - `REPLAY_SPEED_MULTIPLIER=10.0`
 - `VEHICLE_ROUTE_MAPPING_PATH=./data/vehicle_route_mapping.csv` (optional route enrichment by vehicle)
+- `data/route_catalog_table2.csv` (optional route metadata from PDF Table 2, used to enrich route report/dashboard)
 
-## 8. Gold Outputs
+## 10. Gold Outputs
 - `trip_summary`
 - `route_hourly_emissions`
 - `bus_daily_emissions`
@@ -98,7 +127,7 @@ Written to:
 - `data/lakehouse/gold/route_hourly_emissions`
 - `data/lakehouse/gold/bus_daily_emissions`
 
-## 9. Emission Formulas
+## 11. Emission Formulas
 Config location:
 - `configs/pipeline.yaml` (`emission` block)
 - `configs/emission.yaml`
@@ -107,7 +136,7 @@ Formula:
 - `fuel_liter_est = distance_km * fuel_liter_per_km + idle_minutes * idle_liter_per_minute`
 - `co2_kg_est = fuel_liter_est * co2_kg_per_liter_fuel`
 
-## 10. Report Insights + Dashboard
+## 12. Report Insights + Dashboard
 Generate analysis artifacts and dashboard from Gold:
 ```bash
 make report-assets
@@ -128,7 +157,50 @@ Open dashboard in browser:
 open docs/dashboard/index.html
 ```
 
-## 11. Tests
+## 13. How To Check Stream Is Healthy
+Check process:
+```bash
+ps aux | rg bronze_silver_job.py
+```
+
+Check logs:
+```bash
+tail -f logs/bronze-silver.log
+```
+
+Check checkpoint growth:
+```bash
+find data/checkpoints/bronze_silver/offsets -type f | wc -l
+```
+
+Check Silver Delta commits:
+```bash
+ls data/lakehouse/silver/bus_gps/_delta_log | tail
+```
+
+## 14. Troubleshooting
+1. `service "kafka" is not running` / `service "spark-master" is not running`
+`make create-topics` first, then run `make bronze-silver`.
+
+2. `NoBrokersAvailable` during replay
+Kafka is not up or topic not created. Run:
+```bash
+make create-topics
+```
+
+3. Bronze/Silver crashes with offset reset error
+If topic was deleted/recreated while old checkpoint exists, reset stream state:
+```bash
+make bronze-silver-stop
+make reset-stream
+make create-topics
+```
+Then start `make bronze-silver` again.
+
+4. Full replay seems frozen
+It is usually loading/normalizing very large raw files. Check CPU and replay process before stopping.
+
+## 15. Tests
 ```bash
 make test
 ```
@@ -139,13 +211,13 @@ Current tests cover:
 - Schema normalization helper
 - Emission helper
 
-## 12. Known Limitations
+## 16. Known Limitations
 - Current repo was initialized before real raw files were provided in `data/raw/`.
 - Column mapping is candidate-based and should be adjusted after real inspection output.
 - CO2 is estimated from assumptions and config coefficients.
 - Historical replay simulates streaming behavior and timing.
 
-## 13. Stop Services
+## 17. Stop Services
 ```bash
 make down
 ```
